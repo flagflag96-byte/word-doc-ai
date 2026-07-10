@@ -14,7 +14,7 @@ creds_dict = dict(st.secrets["gcp_service_account"]
 )
 
 # ⚠️ PASTE YOUR SHARED GOOGLE DRIVE FOLDER ID LINK CORRECTIONS HERE
-DRIVE_FOLDER_ID = "https://drive.google.com/drive/folders/1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw" 
+DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw" 
 
 def get_drive_service():
     creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
