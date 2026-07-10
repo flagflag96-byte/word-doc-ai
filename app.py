@@ -12,9 +12,15 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw" 
 
 def get_drive_service():
-    # ከ Streamlit Secrets ላይ የሰርቪስ አካውንት መረጃዎችን በጥራት ማንበብ
     try:
-        creds_info = st.secrets["gcp_service_account"]
+        # ከ Streamlit Secrets ላይ የሰርቪስ አካውንት መረጃዎችን መጫን
+        creds_info = dict(st.secrets["gcp_service_account"])
+        
+        # 🛠️ ዋናው ማስተካከያ፦ በቁልፉ ውስጥ ያሉትን የተሰባበሩ የመስመር ምልክቶች ወደ እውነተኛ \n መተካት
+        raw_key = creds_info["private_key"]
+        fixed_key = raw_key.replace("\\n", "\n")
+        creds_info["private_key"] = fixed_key
+        
         creds = service_account.Credentials.from_service_account_info(creds_info, scopes=SCOPES)
         return build('drive', 'v3', credentials=creds)
     except Exception as e:
@@ -38,7 +44,7 @@ if st.button("Process and Upload to Google Drive"):
                 with open(temp_file, "w", encoding="utf-8") as f:
                     f.write(combined_text)
                 
-                # የድሮ ፋይል ፍለጋ
+                # የድሮ ፋይል ካለ ፈልጎ ማጥፋት
                 query = f"name='live_corpus.txt' and '{DRIVE_FOLDER_ID}' in parents and trashed=false"
                 results = service.files().list(q=query, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
                 items = results.get('files', [])
@@ -48,7 +54,7 @@ if st.button("Process and Upload to Google Drive"):
                     except Exception:
                         pass
                 
-                # አዲስ ፋይል መጫን
+                # አዲሱን ፋይል ወደ ፎልደሩ መጫን
                 text_metadata = {
                     'name': 'live_corpus.txt',
                     'parents': [DRIVE_FOLDER_ID]
