@@ -8,17 +8,19 @@ import os
 st.set_page_config(page_title="Admin Panel", layout="centered")
 st.title("⚙️ Admin Control Panel (Google Drive Secure Storage)")
 
-# Fetches service account dictionaries directly out of cloud environment secrets securely
+# የደህንነት ፈቃድ መለያዎች
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
-# የ Streamlit Secrets መረጃን መጫን
-creds_dict = dict(st.secrets["gcp_service_account"])
+# የ Streamlit Secrets መረጃን በጥንቃቄ መጫን
+try:
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    if "private_key" in creds_dict:
+        creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+except Exception:
+    st.error("❌ የ gcp_service_account መረጃ በ Streamlit Secrets ላይ አልተገኘም! እባክዎ ደረጃ 2ን ይመልከቱ።")
+    st.stop()
 
-# 🛠️ ማስተካከያ 1፡ በ Streamlit Secrets ውስጥ የ \n (የመስመር መስበሪያ) ስህተት ካለ በራስ-ሰር ያስተካክላል
-if "private_key" in creds_dict:
-    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
-
-# ⚠️ የጉግል ድራይቭ ፎልደር መለያ ቁጥር (ID) ብቻ
+# ⚠️ የእርስዎ የጉግል ድራይቭ ፎልደር መለያ ቁጥር (ID) ብቻ
 DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw" 
 
 def get_drive_service():
@@ -42,23 +44,24 @@ if st.button("Process and Upload to Google Drive"):
                 with open(temp_file, "w", encoding="utf-8") as f:
                     f.write(combined_text)
                 
-                # Wipe old version files in the destination folder to prevent clutter
-                query = f"name='live_corpus.txt' and '{DRIVE_FOLDER_ID}' in parents and trashed=false" if DRIVE_FOLDER_ID else "name='live_corpus.txt' and trashed=false"
-                results = service.files().list(q=query, fields="files(id)").execute()
+                # 🛠️ የጥራት ማስተካከያ፦ የድሮ ፋይል ፍለጋው የእርስዎን ፎልደር ብቻ እንዲያይ ማድረግ
+                query = f"name='live_corpus.txt' and '{DRIVE_FOLDER_ID}' in parents and trashed=false"
+                results = service.files().list(q=query, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
                 items = results.get('files', [])
                 for item in items:
                     try:
-                        service.files().delete(fileId=item['id']).execute()
+                        service.files().delete(fileId=item['id'], supportsAllDrives=True).execute()
                     except Exception:
-                        pass # የድሮ ፋይል ማግኘት ካልተቻለ በቀጥታ ያልፋል
+                        pass
                 
-                # 🛠️ ማስተካከያ 2፡ ፋይሉ ወደ ሰርቪስ አካውንቱ ሳይሆን በቀጥታ ወደ እርስዎ ፎልደር እንዲገባ ማስገደድ
-                text_metadata = {'name': 'live_corpus.txt'}
-                if DRIVE_FOLDER_ID:
-                    text_metadata['parents'] = [DRIVE_FOLDER_ID]
+                # 🛠️ ፋይሉ ወደ እርስዎ ፎልደር እንዲገባ ማስገደድ
+                text_metadata = {
+                    'name': 'live_corpus.txt',
+                    'parents': [DRIVE_FOLDER_ID]
+                }
                     
                 media = MediaFileUpload(temp_file, mimetype='text/plain', resumable=True)
-                service.files().create(body=text_metadata, media_body=media, fields='id').execute()
+                service.files().create(body=text_metadata, media_body=media, fields='id', supportsAllDrives=True).execute()
                 
                 if os.path.exists(temp_file):
                     os.remove(temp_file)
