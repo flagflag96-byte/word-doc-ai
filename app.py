@@ -11,16 +11,15 @@ st.title("⚙️ Admin Control Panel (Google Drive Secure Storage)")
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
-# 🛠️ ማስተካከያ 1፦ ቁልፉን (Private Key) ከፎርማት ስህተት ሙሉ በሙሉ ለመጠበቅ በ Base64 ማመስጠር
-# ይህ ጽሑፍ ምንም ዓይነት ክፍተት (Space) ወይም የረድፍ መሰበር የሌለው አንድ ቀጥተኛ መስመር ነው
+# 🛠️ ማስተካከያ 1፦ ሙሉ በሙሉ 100% ንጹህ የሆነ የ Base64 ቁልፍ (ምንም የተሳሳተ ምልክት የሌለበት)
 B64_KEY = (
     "TUlJRXZnSUJBREFOQmdrcWhraUc5dzBCQVFFRkFBU0NCS2d3Z2dTa0FnRUFBb0lCQVFDbjVPVjZNb"
     "HBxUnNJRVhDR1QrRWxEbTFLRlRZNXEzLzdkZ1J1azYzamdkaE0xbTRXRm5ETWZFeHZoOEV3WDNjUGJ"
     "OOVdRWWxsSzlaQmVMdWl0NVhVSzF2Q1B2elpzNXIvbDU1N1FYaWMwYUcxTktyd2hQMTNxVW0za2xOM"
     "lh3YXB0ZGFjTWFlY2tCTWZFNlNYcStjTnR6WWU1QWl4aGdSWDNKVWRMbmRpQ3dORmtFbjFwVUxTZlZ"
     "tUllJS1Qzek9QNVJKRU1UYjI3dVcvK1BQZDRMdGQwa3lKRW9XaUtXWXNmM01NUjh1c014b0twYi84S"
-    "jZhZTlwbGMvUnpuQm1MYnhjZU5RNmYxR弾gLzBYMTBBcloyWkhkVU55bm1hNXhRMHRhNm4ya0tMLy9zY"
-    "m1QeXkydWdmcDV0Tzh4RkkxVFlUVGd0ZzVITENVSFJtd3JkQWdNQkFBRUNnZ0VBTjYzSi9VNkFCc2Rh"
+    "jZhZTlwbGMvUnpuQm1MYnhjZU5RNmYxRGp4LzBYMTBBcloyWkhkVU55bm1hNXhRMHRhNm4ya0tMLy9z"
+    "Ym1QeXkydWdmcDV0Tzh4RkkxVFlUVGd0ZzVITENVSFJtd3JkQWdNQkFBRUNnZ0VBTjYzSi9VNkFCc2Rh"
     "UGxQRWxlY3pjb1FsUVNkbURZd2dVNklmZGZiUjVhY1BQUmJHOTh0b1lGdHRSMk4vOWxHQVFrWXFPR2x"
     "DTE1WbmpMR0VWVkd4RSt0WmFHMzlRRVJleFhxUmZZWVkvUmk1VTJHZGFIQTNWQnpyV0dpN21zM2NuNF"
     "VXTmp0WGZmNm1kNm93VkwzWklMRW95THJUNCtabG9yM0xhd3dRSGZkWUpORjgrNnNXL1VBaGQrUWtKd"
@@ -44,11 +43,10 @@ B64_KEY = (
     "BBTGFrSERsNWc1ZDhkUVQyNWg="
 )
 
-# በ Base64 የተመሰጠረውን ቁልፍ ወደ ትክክለኛው የፓይተን ጽሑፍ መመለስ
+# ቁልፉን ወደ መደበኛ የጽሑፍ ፎርማት መመለስ
 decoded_key = base64.b64decode(B64_KEY).decode("utf-8")
 FIXED_PRIVATE_KEY = f"-----BEGIN PRIVATE KEY-----\n{decoded_key}\n-----END PRIVATE KEY-----\n"
 
-# የጉግል ሰርቪስ አካውንት መረጃዎች
 creds_dict = {
     "type": "service_account",
     "project_id": "modified-badge-500709-q9",
@@ -63,7 +61,7 @@ creds_dict = {
     "universe_domain": "googleapis.com"
 }
 
-# የእርስዎ የጉግል ድራይቭ ፎልደር መለያ ቁጥር (ID)
+# 🛠️ ማስተካከያ 2፦ የእርስዎ የግል Google Drive ማህደር (Folder ID)
 DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw" 
 
 def get_drive_service():
@@ -87,7 +85,7 @@ if st.button("Process and Upload to Google Drive"):
                 with open(temp_file, "w", encoding="utf-8") as f:
                     f.write(combined_text)
                 
-                # 🛠️ ማስተካከያ 2፦ የድሮ ፋይል ፍለጋው የእርስዎን ፎልደር ብቻ እንዲያይ እና የ 'Quota' ስህተት እንዳይመጣ ማድረግ
+                # 🛠️ ማስተካከያ 3፦ የ Quota 403 ስህተትን ለማስቀረት ፍለጋውን በዚህ ፎልደር ላይ ብቻ መወሰን
                 query = f"name='live_corpus.txt' and '{DRIVE_FOLDER_ID}' in parents and trashed=false"
                 results = service.files().list(q=query, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
                 items = results.get('files', [])
@@ -97,7 +95,7 @@ if st.button("Process and Upload to Google Drive"):
                     except Exception:
                         pass
                 
-                # አዲሱን ፋይል በቀጥታ ወደ እርስዎ ፎልደር ማስገባት
+                # አዲሱን ፋይል በቀጥታ ወደ እርስዎ ማህደር መጫን
                 text_metadata = {
                     'name': 'live_corpus.txt',
                     'parents': [DRIVE_FOLDER_ID]
