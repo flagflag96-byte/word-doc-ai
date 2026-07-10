@@ -10,10 +10,15 @@ st.title("⚙️ Admin Control Panel (Google Drive Secure Storage)")
 
 # Fetches service account dictionaries directly out of cloud environment secrets securely
 SCOPES = ['https://www.googleapis.com/auth/drive']
-creds_dict = dict(st.secrets["gcp_service_account"]
-)
 
-# ⚠️ PASTE YOUR SHARED GOOGLE DRIVE FOLDER ID LINK CORRECTIONS HERE
+# የ Streamlit Secrets መረጃን መጫን
+creds_dict = dict(st.secrets["gcp_service_account"])
+
+# 🛠️ ማስተካከያ 1፡ በ Streamlit Secrets ውስጥ የ \n (የመስመር መስበሪያ) ስህተት ካለ በራስ-ሰር ያስተካክላል
+if "private_key" in creds_dict:
+    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+
+# ⚠️ የጉግል ድራይቭ ፎልደር መለያ ቁጥር (ID) ብቻ
 DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw" 
 
 def get_drive_service():
@@ -42,13 +47,17 @@ if st.button("Process and Upload to Google Drive"):
                 results = service.files().list(q=query, fields="files(id)").execute()
                 items = results.get('files', [])
                 for item in items:
-                    service.files().delete(fileId=item['id']).execute()
+                    try:
+                        service.files().delete(fileId=item['id']).execute()
+                    except Exception:
+                        pass # የድሮ ፋይል ማግኘት ካልተቻለ በቀጥታ ያልፋል
                 
+                # 🛠️ ማስተካከያ 2፡ ፋይሉ ወደ ሰርቪስ አካውንቱ ሳይሆን በቀጥታ ወደ እርስዎ ፎልደር እንዲገባ ማስገደድ
                 text_metadata = {'name': 'live_corpus.txt'}
                 if DRIVE_FOLDER_ID:
                     text_metadata['parents'] = [DRIVE_FOLDER_ID]
                     
-                media = MediaFileUpload(temp_file, mimetype='text/plain')
+                media = MediaFileUpload(temp_file, mimetype='text/plain', resumable=True)
                 service.files().create(body=text_metadata, media_body=media, fields='id').execute()
                 
                 if os.path.exists(temp_file):
