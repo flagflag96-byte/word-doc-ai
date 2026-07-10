@@ -92,7 +92,7 @@ if submit_button and user_question.strip():
         st.session_state["all_chats"][active_id]["title"] = user_question[:25] + "..."
         
     with st.spinner("Analyzing cloud documents..."):
-        models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash-8b"]
+        models_to_try = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite"]
         ai_answer = None
         prompt = f"Use ONLY this text to answer: {combined_text}\n\nQuestion: {user_question}\nAnswer:"
         
