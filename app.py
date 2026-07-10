@@ -10,7 +10,10 @@ st.title("⚙️ Admin Control Panel (Google Drive Secure Storage)")
 
 # Fetches service account dictionaries directly out of cloud environment secrets securely
 SCOPES = ['https://www.googleapis.com/auth/drive']
-creds_dict = dict(st.secrets["gcp_service_account"])
+creds_dict = dict(st.secrets["gcp_service_account"]
+               
+if "private_key" in creds_dict:
+    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n"))
 
 # ⚠️ PASTE YOUR SHARED GOOGLE DRIVE FOLDER ID LINK CORRECTIONS HERE
 DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw" 
