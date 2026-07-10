@@ -9,14 +9,14 @@ st.set_page_config(page_title="Admin Panel", layout="centered")
 st.title("⚙️ Admin Control Panel (Google Drive Secure Storage)")
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
+# በትክክል የተቀመጠ የፎልደር መታወቂያ ብቻ
 DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw" 
 
 def get_drive_service():
     try:
-        # መረጃውን ከ Streamlit Secrets ላይ ማንበብ
         creds_info = dict(st.secrets["gcp_service_account"])
         
-        # በ TOML ጽሑፍ ውስጥ ያሉትን የ \n ምልክቶች ወደ እውነተኛ አዲስ መስመር መቀየር
+        # የቁልፍ መዛባትን በኮድ ደረጃ በራስ-ሰር ማስተካከያ ዘዴ
         raw_key = creds_info["private_key"]
         fixed_key = raw_key.replace("\\n", "\n")
         creds_info["private_key"] = fixed_key
@@ -44,7 +44,7 @@ if st.button("Process and Upload to Google Drive"):
                 with open(temp_file, "w", encoding="utf-8") as f:
                     f.write(combined_text)
                 
-                # የድሮ ፋይል ካለ ማጥፋት
+                # የድሮ ፋይል ካለ ፍለጋ (supportsAllDrives መጨመሩን ያረጋግጡ)
                 query = f"name='live_corpus.txt' and '{DRIVE_FOLDER_ID}' in parents and trashed=false"
                 results = service.files().list(q=query, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
                 items = results.get('files', [])
@@ -54,7 +54,7 @@ if st.button("Process and Upload to Google Drive"):
                     except Exception:
                         pass
                 
-                # አዲሱን ፋይል መጫን
+                # አዲስ ፋይል መጫን
                 text_metadata = {
                     'name': 'live_corpus.txt',
                     'parents': [DRIVE_FOLDER_ID]
