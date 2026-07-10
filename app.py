@@ -13,10 +13,10 @@ DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw"
 
 def get_drive_service():
     try:
-        # ከ Streamlit Secrets ላይ የሰርቪስ አካውንት መረጃዎችን መጫን
+        # መረጃውን ከ Streamlit Secrets ላይ ማንበብ
         creds_info = dict(st.secrets["gcp_service_account"])
         
-        # 🛠️ ዋናው ማስተካከያ፦ በቁልፉ ውስጥ ያሉትን የተሰባበሩ የመስመር ምልክቶች ወደ እውነተኛ \n መተካት
+        # በ TOML ጽሑፍ ውስጥ ያሉትን የ \n ምልክቶች ወደ እውነተኛ አዲስ መስመር መቀየር
         raw_key = creds_info["private_key"]
         fixed_key = raw_key.replace("\\n", "\n")
         creds_info["private_key"] = fixed_key
@@ -44,7 +44,7 @@ if st.button("Process and Upload to Google Drive"):
                 with open(temp_file, "w", encoding="utf-8") as f:
                     f.write(combined_text)
                 
-                # የድሮ ፋይል ካለ ፈልጎ ማጥፋት
+                # የድሮ ፋይል ካለ ማጥፋት
                 query = f"name='live_corpus.txt' and '{DRIVE_FOLDER_ID}' in parents and trashed=false"
                 results = service.files().list(q=query, fields="files(id)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
                 items = results.get('files', [])
@@ -54,7 +54,7 @@ if st.button("Process and Upload to Google Drive"):
                     except Exception:
                         pass
                 
-                # አዲሱን ፋይል ወደ ፎልደሩ መጫን
+                # አዲሱን ፋይል መጫን
                 text_metadata = {
                     'name': 'live_corpus.txt',
                     'parents': [DRIVE_FOLDER_ID]
