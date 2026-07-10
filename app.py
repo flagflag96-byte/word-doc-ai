@@ -3,7 +3,6 @@ import docx2txt
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
-import base64
 import os
 
 st.set_page_config(page_title="Admin Panel", layout="centered")
@@ -14,32 +13,11 @@ DRIVE_FOLDER_ID = "1WezwaqrZ_llVz3_ukTDi8Ds7rsc5fVQw"
 
 def get_drive_service():
     try:
-        # መረጃውን ከ Streamlit Secrets ላይ ማንበብ
+        # መረጃውን ከ Streamlit Secrets ላይ ቀጥታ ማንበብ
         creds_info = dict(st.secrets["gcp_service_account"])
         
-        # 🔐 በ Base64 የታሰረውን ቁልፍ ፈትቶ ወደ መደበኛ ጽሑፍ መቀየር
-        b64_key = creds_info["private_key_base64"]
-        decoded_key = base64.b64decode(b64_key).decode("utf-8")
-        
-        # የ \n ምልክቶችን በትክክል ወደ አዲስ መስመር መለወጥ
-        fixed_key = decoded_key.replace("\\n", "\n")
-        
-        # የሰርቪስ አካውንት መዋቅር ማዘጋጀት
-        creds_dict = {
-            "type": creds_info["type"],
-            "project_id": creds_info["project_id"],
-            "private_key_id": creds_info["private_key_id"],
-            "private_key": fixed_key,
-            "client_email": creds_info["client_email"],
-            "client_id": creds_info["client_id"],
-            "auth_uri": creds_info["auth_uri"],
-            "token_uri": creds_info["token_uri"],
-            "auth_provider_x509_cert_url": creds_info["auth_provider_x509_cert_url"],
-            "client_x509_cert_url": creds_info["client_x509_cert_url"],
-            "universe_domain": creds_info.get("universe_domain", "googleapis.com")
-        }
-        
-        creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+        # ቁልፉ በ 3 ጥቅስ ምልክት ስለገባ ምንም አይነት የ \\n መተካት አያስፈልገውም
+        creds = service_account.Credentials.from_service_account_info(creds_info, scopes=SCOPES)
         return build('drive', 'v3', credentials=creds)
     except Exception as e:
         st.error(f"❌ Configuration Error: {e}")
